@@ -44,11 +44,11 @@ public class JForm extends javax.swing.JFrame {
             role = "Client : ";
         } else {
             role = "Server : ";
-            bSend.setEnabled(false);
-            cekanje();
+            
 
         }
         setTitle(role);
+        prijem();
     }
 
     /**
@@ -200,6 +200,9 @@ public class JForm extends javax.swing.JFrame {
             // TODO add your handling code here:
             String str = role + tMessage.getText().trim();
             tLast.setText(str);
+            if(socket==null|| socket.isClosed()){System.exit(0);
+            return;
+            }
             pr = new PrintWriter(socket.getOutputStream());
             pr.println(str);
             pr.flush();
@@ -209,7 +212,6 @@ public class JForm extends javax.swing.JFrame {
             all(str);
             tMessage.setText("");
             
-            cekanje();
 
         } catch (IOException ex) {
             Logger.getLogger(JForm.class.getName()).log(Level.SEVERE, null, ex);
@@ -249,7 +251,7 @@ public class JForm extends javax.swing.JFrame {
         }
     }
 
-    private void cekanje() {
+    /*private void cekanje() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -274,6 +276,33 @@ public class JForm extends javax.swing.JFrame {
 
         });
         thread.start();
-    }
+    }*/
+private void prijem() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (socket != null || !socket.isClosed()) {
+                    try {
+                        String str = "";
 
+                        br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        str = br.readLine();
+                        all(str);
+                        if (str.endsWith("end")) {
+                            socket.close();
+                            System.exit(0);
+                            
+                        }
+                        bSend.setEnabled(true);
+                        tMessage.setEditable(true);
+                    } catch (IOException ex) {
+                        System.out.println("Connection is closed");
+                        break;
+                    }
+                }
+                System.exit(0);
+            }
+        });
+        thread.start();
+    }
 }
